@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import SignUpForm
+from .forms import SignUpForm, PatientForm
 from .models import Record
 
 # Create your views here.
@@ -51,3 +51,24 @@ def register_user(request):
         return render(request, 'register.html', {'form': form})
     
     return render(request, 'register.html', {'form': form})
+
+def patient_dashboard(request):
+    return render(request, 'patient_dashboard.html', {})
+
+def register_patient(request):
+    if request.method == 'POST':
+        form = PatientForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Authenticate and Login
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password1']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            messages.success(request, "You Have Successfully Registered Welcome !")
+            return redirect('home')
+    else:
+        form = PatientForm()
+        return render(request, 'patient_register.html', {'form': form})
+    
+    return render(request, 'patient_register.html', {'form': form})
