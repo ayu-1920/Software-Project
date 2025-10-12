@@ -12,3 +12,5 @@ pip install mysql-connector-python
 ```bash
 python manage.py runserver
 ```
+
+## Working on it
