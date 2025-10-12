@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import SignUpForm, PatientForm
+from .forms import SignUpForm
 from .models import Record
+from .decorators import group_required
+from django.contrib.auth.models import Group
 
 # Create your views here.
 
@@ -17,7 +19,10 @@ def home(request):
         if user is not None:
             login(request, user)
             messages.success(request, "You have been Logged In!")
-            return redirect('home')
+            if user.groups.filter(name='patients').exists():
+                return redirect('patient')
+            else:
+                return redirect('home')
         else:
             messages.success(request, "There was An Error Logging In, Please Try Again...")
             return redirect('home')
@@ -38,37 +43,33 @@ def register_user(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            form.save()
             # Authenticate and Login
+            role = form.cleaned_data.get('role')
+            role = role + 's'
+            try:
+                group = Group.objects.get(name=role)
+            except Group.DoesNotExist:
+                messages.error(request, f"The group '{role}' does not exist. Please contact admin.")
+                return redirect('register')
+            
+            user = form.save()
+            user.groups.add(group)
+            
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
             user = authenticate(username=username, password=password)
             login(request, user)
             messages.success(request, "You Have Successfully Registered Welcome !")
-            return redirect('home')
+            if user.groups.filter(name='patients').exists():
+                    return redirect('patient_dashboard')  # your patient dashboard URL name
+            else:
+                return redirect('home')
     else:
         form = SignUpForm()
         return render(request, 'register.html', {'form': form})
     
     return render(request, 'register.html', {'form': form})
 
+@group_required('patients')
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html', {})
-
-def register_patient(request):
-    if request.method == 'POST':
-        form = PatientForm(request.POST)
-        if form.is_valid():
-            form.save()
-            # Authenticate and Login
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']
-            user = authenticate(username=username, password=password)
-            login(request, user)
-            messages.success(request, "You Have Successfully Registered Welcome !")
-            return redirect('home')
-    else:
-        form = PatientForm()
-        return render(request, 'patient_register.html', {'form': form})
-    
-    return render(request, 'patient_register.html', {'form': form})
