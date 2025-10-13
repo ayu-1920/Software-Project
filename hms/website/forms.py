@@ -4,13 +4,24 @@ from django import forms
 from .models import Record
 
 class SignUpForm(UserCreationForm):
+    ROLE_CHOICES = [
+        ('patient', 'Patient'),
+        ('doctor', 'Doctor'),
+    ]
+    
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES, 
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Register As'
+    )
+    
     email = forms.EmailField(label='', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}))
     first_name = forms.CharField(label='', max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}))
     last_name = forms.CharField(label='', max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'role')
 
     def __init__(self, *args, **kwargs):
         super(SignUpForm, self).__init__(*args, **kwargs)
@@ -28,4 +39,7 @@ class SignUpForm(UserCreationForm):
         self.fields['password2'].widget.attrs['class'] = 'form-control'
         self.fields['password2'].widget.attrs['placeholder'] = 'Confirm Password'
         self.fields['password2'].label = ''
-        self.fields['password2'].help_text = '<span class="form-text text-muted"><small>Enter the same password as before, for verification.</small></span>'	
+        self.fields['password2'].help_text = '<span class="form-text text-muted"><small>Enter the same password as before, for verification.</small></span>'
+
+        # Add bootstrap class to role field too
+        self.fields['role'].widget.attrs['class'] = 'form-control'

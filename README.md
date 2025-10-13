@@ -13,4 +13,5 @@ pip install mysql-connector-python
 python manage.py runserver
 ```
 
+- Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ## Working on it
