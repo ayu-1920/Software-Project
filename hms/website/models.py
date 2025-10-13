@@ -14,3 +14,16 @@ class Record(models.Model):
 
     def __str__(self):
         return (f"{self.first_name} {self.last_name}")
+    
+class Patient(models.Model):
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=1, blank=True, null=True)
+    age = models.IntegerField(blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=12, blank=True, null=True)
+    blood_group = models.CharField(max_length=3)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name or ''}"
