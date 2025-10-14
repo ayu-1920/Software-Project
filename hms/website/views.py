@@ -9,7 +9,10 @@ from django.contrib.auth.models import Group
 # Create your views here.
 
 def home(request):
-    records = Patient.objects.all()
+    records = None
+
+    if request.user.is_authenticated and request.user.is_staff:
+        records = Patient.objects.all()
 
     if request.method == 'POST':
         username = request.POST['username']

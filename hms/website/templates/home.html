@@ -7,6 +7,8 @@
 
 {% if user.is_authenticated %}
 
+{% if user.is_staff %}
+
 <table class="table table-hover table-striped table-bordered">
     <thead class="table-dark">
         <tr>
@@ -39,9 +41,17 @@
     </tbody>
 </table>
 
+{% else %}
+
+<h1>Hello</h1>
+
+{% endif%}
+
 
 
 {% else %}
+
+<div class="col-md-6 offset-md-3">
 <h1>Login</h1>
 <br>
 
@@ -58,8 +68,7 @@
     <button type="submit" class="btn btn-secondary">Login</button>
 
 </form>
-
-
+</div>
 
 
 {% endif %}
