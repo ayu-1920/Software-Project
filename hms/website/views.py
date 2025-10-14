@@ -2,14 +2,17 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import SignUpForm
-from .models import Record
+from .models import Record, Patient
 from .decorators import group_required
 from django.contrib.auth.models import Group
 
 # Create your views here.
 
 def home(request):
-    records = Record.objects.all()
+    records = None
+
+    if request.user.is_authenticated and request.user.is_staff:
+        records = Patient.objects.all()
 
     if request.method == 'POST':
         username = request.POST['username']
