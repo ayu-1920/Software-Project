@@ -77,6 +77,8 @@ def register_user(request):
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html', {})
 
+
+
 def patient_record(request, pk):
     if request.user.is_authenticated:
         if request.user.is_staff:
@@ -86,4 +88,5 @@ def patient_record(request, pk):
             messages.success(request, "You Must be Admin to view this Page !")
             return redirect('home')
     else:
+        messages.success(request, "You Must be Logged In to view this Page !")
         return redirect('home')
