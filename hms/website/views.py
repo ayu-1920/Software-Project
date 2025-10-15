@@ -123,3 +123,20 @@ def add_record(request):
         messages.success(request, "You Must Be Logged In ... ")
         return redirect('home')
     
+
+def update_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            curr = Patient.objects.get(id=pk)
+            form = AddPatientForm(request.POST or None, instance=curr)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Record Has Been Updated ! ")
+                return redirect('home')
+            return render(request, 'update_record.html', {'form': form})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Have To Be Logged In ... ")
+        return redirect('home')
