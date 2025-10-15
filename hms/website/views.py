@@ -76,3 +76,14 @@ def register_user(request):
 @group_required('patients')
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html', {})
+
+def patient_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            record = Patient.objects.get(id=pk)
+            return render(request, 'patient_record.html', {'patient_record': record})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        return redirect('home')
