@@ -19,20 +19,22 @@
             <th scope="col">Address</th>
             <th scope="col">Phone</th>
             <th scope="col">Blood Group</th>
+            <th scope="col">ID</th>
         </tr>
     </thead>
     <tbody>
         {% if records %}
         {% for record in records %}
         <tr>
-            <td>{{ record.first_name }}
-                {{ record.last_name }}</td>
+            <td><a href="{% url 'patient_record' record.id %}">{{ record.first_name }}
+                {{ record.last_name }}</a></td>
             <td>{{ record.dob }}</td>
             <td>{{ record.gender }}</td>
             <td>{{ record.age }}</td>
             <td>{{ record.address }}</td>
             <td>{{ record.phone }}</td>
             <td>{{ record.blood_group }}</td>
+            <td><a href="{% url 'patient_record' record.id %}">{{ record.id }}</a> </td>
         </tr>
         {% endfor %}
 

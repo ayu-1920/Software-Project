@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import SignUpForm
+from .forms import SignUpForm, AddPatientForm
 from .models import Record, Patient
 from .decorators import group_required
 from django.contrib.auth.models import Group
@@ -64,7 +64,7 @@ def register_user(request):
             login(request, user)
             messages.success(request, "You Have Successfully Registered Welcome !")
             if user.groups.filter(name='patients').exists():
-                    return redirect('patient_dashboard')  # your patient dashboard URL name
+                    return redirect('patient')  # your patient dashboard URL name
             else:
                 return redirect('home')
     else:
@@ -76,3 +76,67 @@ def register_user(request):
 @group_required('patients')
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html', {})
+
+
+
+def patient_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            record = Patient.objects.get(id=pk)
+            return render(request, 'patient_record.html', {'patient_record': record})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Must be Logged In to view this Page !")
+        return redirect('home')
+    
+def delete_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            delete_it = Patient.objects.get(id=pk)
+            delete_it.delete()
+            messages.success(request, "Records Deleted Successfully ... ")
+            return redirect('home')
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Must be Logged In to view this Page !")
+        return redirect('home')
+
+
+def add_record(request):
+    form = AddPatientForm(request.POST or None)
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            if request.method == "POST":
+                if form.is_valid():
+                    add_record = form.save()
+                    messages.success(request, "Patient Added ... ")
+                    return redirect('home')
+            return render(request, 'add_record.html', {'form': form})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Must Be Logged In ... ")
+        return redirect('home')
+    
+
+def update_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            curr = Patient.objects.get(id=pk)
+            form = AddPatientForm(request.POST or None, instance=curr)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Record Has Been Updated ! ")
+                return redirect('home')
+            return render(request, 'update_record.html', {'form': form})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Have To Be Logged In ... ")
+        return redirect('home')
