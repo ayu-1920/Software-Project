@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import SignUpForm
+from .forms import SignUpForm, AddPatientForm
 from .models import Record, Patient
 from .decorators import group_required
 from django.contrib.auth.models import Group
@@ -103,5 +103,23 @@ def delete_record(request, pk):
             return redirect('home')
     else:
         messages.success(request, "You Must be Logged In to view this Page !")
+        return redirect('home')
+
+
+def add_record(request):
+    form = AddPatientForm(request.POST or None)
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            if request.method == "POST":
+                if form.is_valid():
+                    add_record = form.save()
+                    messages.success(request, "Patient Added ... ")
+                    return redirect('home')
+            return render(request, 'add_record.html', {'form': form})
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Must Be Logged In ... ")
         return redirect('home')
     

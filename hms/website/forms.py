@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
-from .models import Record
+from .models import Record, Patient
 
 class SignUpForm(UserCreationForm):
     ROLE_CHOICES = [
@@ -43,3 +43,42 @@ class SignUpForm(UserCreationForm):
 
         # Add bootstrap class to role field too
         self.fields['role'].widget.attrs['class'] = 'form-control'
+
+class AddPatientForm(forms.ModelForm):
+    first_name = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={'placeholder': "First Name", 'class': 'form-control'}), label="")
+    last_name = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={'placeholder': "Last Name", 'class': 'form-control'}), label="")
+    dob = forms.DateField(
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label=""
+    )
+    gender = forms.CharField(
+        required=True,
+        max_length=1,
+        widget=forms.TextInput(attrs={'placeholder': 'Gender', 'class': 'form-control', 'maxlength': '1'}),
+        label=""
+    )
+    age = forms.IntegerField(
+        required=True,
+        widget=forms.NumberInput(attrs={'placeholder': "Age", 'class': 'form-control'}),
+        label=""
+    )
+    address = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={'placeholder': "Address", 'class': 'form-control', 'rows': 3}),
+        label=""
+    )
+    phone = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': "Phone", 'class': 'form-control'}),
+        label=""
+    )
+    blood_group = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': "Blood Group", 'class': 'form-control'}),
+        label=""
+    )
+
+    class Meta:
+        model = Patient
+        exclude = ("user", )
