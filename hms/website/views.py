@@ -64,7 +64,7 @@ def register_user(request):
             login(request, user)
             messages.success(request, "You Have Successfully Registered Welcome !")
             if user.groups.filter(name='patients').exists():
-                    return redirect('patient_dashboard')  # your patient dashboard URL name
+                    return redirect('patient')  # your patient dashboard URL name
             else:
                 return redirect('home')
     else:
@@ -90,3 +90,18 @@ def patient_record(request, pk):
     else:
         messages.success(request, "You Must be Logged In to view this Page !")
         return redirect('home')
+    
+def delete_record(request, pk):
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            delete_it = Patient.objects.get(id=pk)
+            delete_it.delete()
+            messages.success(request, "Records Deleted Successfully ... ")
+            return redirect('home')
+        else:
+            messages.success(request, "You Must be Admin to view this Page !")
+            return redirect('home')
+    else:
+        messages.success(request, "You Must be Logged In to view this Page !")
+        return redirect('home')
+    
