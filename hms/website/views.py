@@ -3,10 +3,25 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import SignUpForm, AddPatientForm
 from .models import Record, Patient
-from .decorators import group_required
+from .decorators import *
 from django.contrib.auth.models import Group
 
 # Create your views here.
+
+def handle_user_login(request, username, password):
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        messages.success(request, "You have been Logged In!")
+        group_names = ['patients', 'doctors']
+        for gn in group_names:
+            if user.groups.filter(name=gn).exists():
+                # To return patients as patient
+                return redirect(f'{gn[:-1]}')
+        return redirect('home')
+    else:
+        messages.error(request, "There was an error logging in. Please try again.")
+        return redirect('home')
 
 def home(request):
     records = None
@@ -17,22 +32,9 @@ def home(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        # Authenticate
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            messages.success(request, "You have been Logged In!")
-            if user.groups.filter(name='patients').exists():
-                return redirect('patient')
-            elif user.groups.filter(name='doctors').exists():
-                return redirect('doctor')
-            else:
-                return redirect('home')
-        else:
-            messages.success(request, "There was An Error Logging In, Please Try Again...")
-            return redirect('home')
-    else:
-        return render(request, 'home.html', {'records': records})
+        return handle_user_login(request, username, password)
+
+    return render(request, 'home.html', {'records': records})
 
 def login_user(request):
     pass
@@ -49,8 +51,7 @@ def register_user(request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             # Authenticate and Login
-            role = form.cleaned_data.get('role')
-            role = role + 's'
+            role = f"{form.cleaned_data.get('role')}s"
             try:
                 group = Group.objects.get(name=role)
             except Group.DoesNotExist:
@@ -58,93 +59,72 @@ def register_user(request):
                 return redirect('register')
             
             user = form.save()
-            user.groups.add(group)
-            
+            user.groups.add(group)            
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
-            user = authenticate(username=username, password=password)
-            login(request, user)
-            messages.success(request, "You Have Successfully Registered Welcome !")
-            if user.groups.filter(name='patients').exists():
-                    return redirect('patient')  # your patient dashboard URL name
-            elif user.groups.filter(name='doctors').exists():
-                    return redirect('doctor')
-            else:
-                return redirect('home')
-    else:
-        form = SignUpForm()
-        return render(request, 'register.html', {'form': form})
-    
+            return handle_user_login(request, username, password)
+
+    form = SignUpForm()
     return render(request, 'register.html', {'form': form})
 
+@login_required
 @group_required('patients')
 def patient_dashboard(request):
-    return render(request, 'patient_dashboard.html', {})
+    return render(request, 'patient/patient_dashboard.html', {})
 
+@login_required
 @group_required('doctors')
 def doctor_dashboard(request):
-    return render(request, 'doctor_dashboard.html', {})
+    return render(request, 'doctor/doctor_dashboard.html', {})
 
 
-
+@login_required
+@staff_required
 def patient_record(request, pk):
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            record = Patient.objects.get(id=pk)
-            return render(request, 'patient_record.html', {'patient_record': record})
-        else:
-            messages.success(request, "You Must be Admin to view this Page !")
-            return redirect('home')
-    else:
-        messages.success(request, "You Must be Logged In to view this Page !")
+    try:
+        record = Patient.objects.get(id=pk)
+        return render(request, 'patient_record.html', {'patient_record': record})
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient record not found.")
         return redirect('home')
     
+@login_required
+@staff_required    
 def delete_record(request, pk):
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            delete_it = Patient.objects.get(id=pk)
-            delete_it.delete()
-            messages.success(request, "Records Deleted Successfully ... ")
-            return redirect('home')
-        else:
-            messages.success(request, "You Must be Admin to view this Page !")
-            return redirect('home')
-    else:
-        messages.success(request, "You Must be Logged In to view this Page !")
+    try:
+        delete_it = Patient.objects.get(id=pk)
+        delete_it.delete()
+        messages.success(request, "Records Deleted Successfully ... ")
+        return redirect('home')
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient record not found.")
         return redirect('home')
 
-
+@login_required
+@staff_required
 def add_record(request):
     form = AddPatientForm(request.POST or None)
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            if request.method == "POST":
-                if form.is_valid():
-                    add_record = form.save()
-                    messages.success(request, "Patient Added ... ")
-                    return redirect('home')
-            return render(request, 'add_record.html', {'form': form})
-        else:
-            messages.success(request, "You Must be Admin to view this Page !")
+    if request.method == "POST":
+        if form.is_valid():
+            add_record = form.save()
+            messages.success(request, "Patient Added ... ")
             return redirect('home')
-    else:
-        messages.success(request, "You Must Be Logged In ... ")
-        return redirect('home')
     
-
+    return render(request, 'add_record.html', {'form': form})
+        
+    
+    
+@login_required
+@staff_required
 def update_record(request, pk):
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            curr = Patient.objects.get(id=pk)
-            form = AddPatientForm(request.POST or None, instance=curr)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Record Has Been Updated ! ")
-                return redirect('home')
-            return render(request, 'update_record.html', {'form': form})
-        else:
-            messages.success(request, "You Must be Admin to view this Page !")
+    try:
+        curr = Patient.objects.get(id=pk)
+        form = AddPatientForm(request.POST or None, instance=curr)
+        if request.method == "POST" and form.is_valid():
+            form.save()
+            messages.success(request, "Record Has Been Updated ! ")
             return redirect('home')
-    else:
-        messages.success(request, "You Have To Be Logged In ... ")
+        return render(request, 'update_record.html', {'form': form})
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient record not found.")
         return redirect('home')
