@@ -24,6 +24,8 @@ def home(request):
             messages.success(request, "You have been Logged In!")
             if user.groups.filter(name='patients').exists():
                 return redirect('patient')
+            elif user.groups.filter(name='doctors').exists():
+                return redirect('doctor')
             else:
                 return redirect('home')
         else:
@@ -65,6 +67,8 @@ def register_user(request):
             messages.success(request, "You Have Successfully Registered Welcome !")
             if user.groups.filter(name='patients').exists():
                     return redirect('patient')  # your patient dashboard URL name
+            elif user.groups.filter(name='doctors').exists():
+                    return redirect('doctor')
             else:
                 return redirect('home')
     else:
@@ -76,6 +80,10 @@ def register_user(request):
 @group_required('patients')
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html', {})
+
+@group_required('doctors')
+def doctor_dashboard(request):
+    return render(request, 'doctor_dashboard.html', {})
 
 
 
