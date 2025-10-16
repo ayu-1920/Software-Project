@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Record(models.Model):
@@ -16,6 +17,9 @@ class Record(models.Model):
         return (f"{self.first_name} {self.last_name}")
     
 class Patient(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+
+
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
