@@ -14,4 +14,6 @@ python manage.py runserver
 ```
 
 - Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-## Working on it
+## If Restarted Do This
+- Right now, did not connect user to patient, so when restarted, do it.
+- Use Django Profile for that because we want user to register and normal, later ask for more details
